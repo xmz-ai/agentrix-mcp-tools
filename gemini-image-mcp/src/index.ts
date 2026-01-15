@@ -102,7 +102,7 @@ class GeminiImageMCPServer {
     // Handle tool calls
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       if (request.params.name === "generate_image") {
-        return await this.handleImageGeneration(request.params.arguments as ImageGenerationParams);
+        return await this.handleImageGeneration(request.params.arguments as unknown as ImageGenerationParams);
       }
 
       throw new Error(`Unknown tool: ${request.params.name}`);
@@ -113,9 +113,9 @@ class GeminiImageMCPServer {
     content: Array<{ type: string; text?: string; data?: string; mimeType?: string }>;
   }> {
     try {
-      const { prompt, aspectRatio = "1:1", negativePrompt } = params;
+      const { prompt, negativePrompt } = params;
 
-      // Construct the full prompt with aspect ratio and negative prompt
+      // Construct the full prompt with negative prompt
       let fullPrompt = prompt;
 
       if (negativePrompt) {
@@ -137,7 +137,6 @@ class GeminiImageMCPServer {
           temperature: 1.0,
           topP: 0.95,
           topK: 40,
-          maxOutputTokens: 8192,
           responseMimeType: "image/png",
         },
       };
