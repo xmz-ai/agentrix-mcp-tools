@@ -119,13 +119,14 @@ class GeminiImageMCPServer {
       let fullPrompt = prompt;
 
       if (negativePrompt) {
-        fullPrompt += `\n\nAvoid: ${negativePrompt}`;
+        fullPrompt += `\n\n ## Avoid: ${negativePrompt}`;
       }
 
       // Prepare the request payload for Gemini API
       const requestBody = {
         contents: [
           {
+            role: "user",
             parts: [
               {
                 text: fullPrompt,
@@ -142,13 +143,14 @@ class GeminiImageMCPServer {
       };
 
       // Make API request
-      const url = `${GEMINI_BASE_URL}/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+      const url = `${GEMINI_BASE_URL}/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
       const response = await axios.post<GeminiImageResponse>(url, requestBody, {
         headers: {
           "Content-Type": "application/json",
+          "x-goog-api-key": `${GEMINI_API_KEY}`
         },
-        timeout: 60000, // 60 second timeout
+        timeout: 180000, // 180 second timeout
       });
 
       // Check for API errors
