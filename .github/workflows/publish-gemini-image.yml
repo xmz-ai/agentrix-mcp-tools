@@ -1,19 +1,22 @@
-name: Publish Package to npm
+name: Publish Gemini Image MCP to npm
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'package.json'
-      - 'src/**'
-      - 'tsconfig.json'
+      - 'gemini-image-mcp/package.json'
+      - 'gemini-image-mcp/src/**'
+      - 'gemini-image-mcp/tsconfig.json'
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
   publish:
     name: Build and Publish to npm
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gemini-image-mcp
 
     permissions:
       contents: read
