@@ -12,7 +12,7 @@ import axios, { AxiosError } from "axios";
 // Configuration from environment variables
 const GEMINI_BASE_URL = process.env.GEMINI_BASE_URL || "https://generativelanguage.googleapis.com/v1beta";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash-exp";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash-image";
 
 // Validate required configuration
 if (!GEMINI_API_KEY) {

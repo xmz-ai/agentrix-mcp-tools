@@ -166,7 +166,7 @@ gemini-image-mcp
 # 运行时可以看到
 Gemini Image MCP Server running on stdio
 Using base URL: https://...
-Using model: gemini-2.0-flash-exp
+Using model: gemini-2.5-flash-image
 ```
 
 ### 测试 API 连接

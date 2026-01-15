@@ -25,7 +25,7 @@ Before publishing, test the MCP server locally:
 # Set environment variables
 export GEMINI_API_KEY="your-api-key"
 export GEMINI_BASE_URL="https://generativelanguage.googleapis.com/v1beta"
-export GEMINI_MODEL="gemini-2.0-flash-exp"
+export GEMINI_MODEL="gemini-2.5-flash-image"
 
 # Run the server
 npm start
@@ -133,7 +133,7 @@ Make sure your GEMINI_API_KEY is valid and has access to image generation featur
 
 ### Model Selection
 
-Different Gemini models may have different capabilities. The default `gemini-2.0-flash-exp` is optimized for image generation. Check Google's documentation for available models.
+Different Gemini models may have different capabilities. The default `gemini-2.5-flash-image` is optimized for image generation. Check Google's documentation for available models.
 
 ## Development
 
