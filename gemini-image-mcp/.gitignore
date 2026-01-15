@@ -1,11 +1,8 @@
 # Dependencies
 node_modules/
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+dist/
 
 # Build output
-dist/
 *.tsbuildinfo
 
 # Environment variables
