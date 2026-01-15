@@ -133,6 +133,7 @@ class GeminiImageMCPServer {
       const requestBody = {
         contents: [
           {
+            role: "user",
             parts: [
               {
                 text: fullPrompt,
@@ -143,14 +144,12 @@ class GeminiImageMCPServer {
         generationConfig: {
           temperature: 1.0,
           topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 8192,
-          responseMimeType: "image/png",
+          topK: 40
         },
       };
 
       // Make API request
-      const url = `${GEMINI_BASE_URL}/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+      const url = `${GEMINI_BASE_URL}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
       const response = await axios.post<GeminiImageResponse>(url, requestBody, {
         headers: {
