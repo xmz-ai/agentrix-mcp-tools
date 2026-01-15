@@ -31,16 +31,38 @@ export GEMINI_MODEL="gemini-2.5-flash-image"
 npm start
 ```
 
-### 4. Test with Claude Desktop (Local)
+### 4. Test with MCP Inspector
 
-Edit your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+Use the [MCP Inspector](https://github.com/modelcontextprotocol/inspector) to test your MCP server:
+
+```bash
+# Install MCP Inspector globally
+npm install -g @modelcontextprotocol/inspector
+
+# Set your environment variables first
+export GEMINI_API_KEY="your-api-key"
+export GEMINI_BASE_URL="https://generativelanguage.googleapis.com/v1beta"
+export GEMINI_MODEL="gemini-2.5-flash-image"
+
+# Run the inspector with your local build
+npx @modelcontextprotocol/inspector node /absolute/path/to/gemini-image-mcp/dist/index.js
+
+# Or test the published package
+npx @modelcontextprotocol/inspector npx -y @agentrix/gemini-image-mcp
+```
+
+The inspector will open a web interface where you can test the `generate_image` tool interactively.
+
+**Alternative: Test with Claude Desktop**
+
+For testing with Claude Desktop, edit your config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
 ```json
 {
   "mcpServers": {
     "gemini-image": {
-      "command": "node",
-      "args": ["/absolute/path/to/gemini-image-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@agentrix/gemini-image-mcp"],
       "env": {
         "GEMINI_API_KEY": "your-api-key-here"
       }
@@ -65,13 +87,13 @@ npm publish --access public
 
 ### 6. Use Published Package
 
-After publishing, users can install with:
+After publishing, users can install globally:
 
 ```bash
 npm install -g @agentrix/gemini-image-mcp
 ```
 
-And configure Claude Desktop:
+And configure Claude Desktop with the installed package:
 
 ```json
 {
@@ -86,21 +108,7 @@ And configure Claude Desktop:
 }
 ```
 
-Or use with npx (no installation needed):
-
-```json
-{
-  "mcpServers": {
-    "gemini-image": {
-      "command": "npx",
-      "args": ["-y", "@agentrix/gemini-image-mcp"],
-      "env": {
-        "GEMINI_API_KEY": "your-api-key-here"
-      }
-    }
-  }
-}
-```
+Or use with `npx` (recommended - no installation needed, always uses latest version).
 
 ## Example Usage
 
