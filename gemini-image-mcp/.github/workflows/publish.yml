@@ -1,0 +1,117 @@
+name: Publish Package to npm
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'package.json'
+      - 'src/**'
+      - 'tsconfig.json'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  publish:
+    name: Build and Publish to npm
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write  # Required for npm provenance
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for version checks
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Check if version changed
+        id: version-check
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Check if this version exists on npm
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          if npm view $PACKAGE_NAME@$CURRENT_VERSION version 2>/dev/null; then
+            echo "Version $CURRENT_VERSION already published"
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          else
+            echo "Version $CURRENT_VERSION is new"
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          fi
+
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        if: steps.version-check.outputs.should_publish == 'true'
+        run: npm ci
+
+      - name: Build project
+        if: steps.version-check.outputs.should_publish == 'true'
+        run: npm run build
+
+      - name: Verify build output
+        if: steps.version-check.outputs.should_publish == 'true'
+        run: |
+          echo "Checking dist directory..."
+          ls -lah dist/
+          echo "Verifying index.js exists..."
+          test -f dist/index.js || exit 1
+          echo "Checking shebang..."
+          head -1 dist/index.js | grep "#!/usr/bin/env node" || exit 1
+          echo "Build verification passed!"
+
+      - name: Set executable permissions
+        if: steps.version-check.outputs.should_publish == 'true'
+        run: chmod +x dist/index.js
+
+      - name: Publish to npm
+        if: steps.version-check.outputs.should_publish == 'true'
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create Git tag
+        if: steps.version-check.outputs.should_publish == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ steps.version-check.outputs.version }}" -m "Release v${{ steps.version-check.outputs.version }}"
+          git push origin "v${{ steps.version-check.outputs.version }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish summary
+        if: steps.version-check.outputs.should_publish == 'true'
+        run: |
+          echo "## 🚀 Published Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package**: @agentrix/gemini-image-mcp" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ steps.version-check.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Registry**: https://www.npmjs.com/package/@agentrix/gemini-image-mcp" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Installation" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "npm install -g @agentrix/gemini-image-mcp" >> $GITHUB_STEP_SUMMARY
+          echo "# or" >> $GITHUB_STEP_SUMMARY
+          echo "npx @agentrix/gemini-image-mcp" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Skip publish notice
+        if: steps.version-check.outputs.should_publish == 'false'
+        run: |
+          echo "## ℹ️ Skipped Publishing" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Version ${{ steps.version-check.outputs.version }} is already published to npm." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To publish a new version:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Update version in package.json" >> $GITHUB_STEP_SUMMARY
+          echo "2. Commit and push to main branch" >> $GITHUB_STEP_SUMMARY
