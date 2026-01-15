@@ -106,11 +106,21 @@ Or use with npx (no installation needed):
 
 Once configured in Claude Desktop, you can ask Claude to generate images:
 
+**Return base64 images:**
 - "Generate an image of a sunset over mountains"
 - "Create a 16:9 landscape image of a futuristic city"
 - "Generate an image of a cat, but avoid any dogs or other animals"
 
 The tool will return base64 encoded images that Claude can display.
+
+**Save images to disk:**
+- "Generate an image of a sunset and save it to /Users/myname/pictures"
+- "Create an image of a cat and save it to ~/Downloads"
+
+When saving to disk, the tool will:
+- Create the directory if it doesn't exist
+- Save all generated images with timestamped filenames (e.g., `image_1737023456789_1.png`)
+- Return the full paths of saved files
 
 ## Troubleshooting
 

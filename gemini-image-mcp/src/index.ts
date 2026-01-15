@@ -8,6 +8,8 @@ import {
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import axios, { AxiosError } from "axios";
+import { writeFileSync, mkdirSync, existsSync } from "fs";
+import { join, resolve } from "path";
 
 // Configuration from environment variables
 const GEMINI_BASE_URL = process.env.GEMINI_BASE_URL || "https://generativelanguage.googleapis.com/v1beta";
@@ -24,6 +26,7 @@ interface ImageGenerationParams {
   prompt: string;
   aspectRatio?: "1:1" | "16:9" | "9:16" | "4:3" | "3:4";
   negativePrompt?: string;
+  path?: string;
   safetySettings?: {
     category: string;
     threshold: string;
@@ -72,7 +75,7 @@ class GeminiImageMCPServer {
       const tools: Tool[] = [
         {
           name: "generate_image",
-          description: "Generate an image using Gemini Banana API based on a text prompt. Returns base64 encoded image data.",
+          description: "Generate an image using Gemini Banana API based on a text prompt. Can save images to a specified directory or return base64 encoded data.",
           inputSchema: {
             type: "object",
             properties: {
@@ -89,6 +92,10 @@ class GeminiImageMCPServer {
               negativePrompt: {
                 type: "string",
                 description: "Optional negative prompt describing what to avoid in the image",
+              },
+              path: {
+                type: "string",
+                description: "Optional directory path to save generated images. If provided, images will be saved as PNG files instead of returning base64 data.",
               },
             },
             required: ["prompt"],
@@ -113,20 +120,19 @@ class GeminiImageMCPServer {
     content: Array<{ type: string; text?: string; data?: string; mimeType?: string }>;
   }> {
     try {
-      const { prompt, negativePrompt } = params;
+      const { prompt, negativePrompt, path } = params;
 
       // Construct the full prompt with negative prompt
       let fullPrompt = prompt;
 
       if (negativePrompt) {
-        fullPrompt += `\n\n ## Avoid: ${negativePrompt}`;
+        fullPrompt += `\n\nAvoid: ${negativePrompt}`;
       }
 
       // Prepare the request payload for Gemini API
       const requestBody = {
         contents: [
           {
-            role: "user",
             parts: [
               {
                 text: fullPrompt,
@@ -138,19 +144,19 @@ class GeminiImageMCPServer {
           temperature: 1.0,
           topP: 0.95,
           topK: 40,
+          maxOutputTokens: 8192,
           responseMimeType: "image/png",
         },
       };
 
       // Make API request
-      const url = `${GEMINI_BASE_URL}/v1beta/models/${GEMINI_MODEL}:generateContent`;
+      const url = `${GEMINI_BASE_URL}/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
       const response = await axios.post<GeminiImageResponse>(url, requestBody, {
         headers: {
           "Content-Type": "application/json",
-          "x-goog-api-key": `${GEMINI_API_KEY}`
         },
-        timeout: 180000, // 180 second timeout
+        timeout: 60000, // 60 second timeout
       });
 
       // Check for API errors
@@ -158,26 +164,85 @@ class GeminiImageMCPServer {
         throw new Error(`Gemini API error: ${response.data.error.message}`);
       }
 
-      // Extract image data from response
-      const imageData = response.data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-
-      if (!imageData || !imageData.data) {
+      // Check if we have any candidates
+      if (!response.data.candidates || response.data.candidates.length === 0) {
         throw new Error("No image data returned from Gemini API");
       }
 
-      return {
-        content: [
+      // Collect all images from all candidates and parts
+      const allImages: Array<{ data: string; mimeType: string }> = [];
+
+      for (const candidate of response.data.candidates) {
+        if (candidate.content?.parts) {
+          for (const part of candidate.content.parts) {
+            if (part.inlineData?.data) {
+              allImages.push({
+                data: part.inlineData.data,
+                mimeType: part.inlineData.mimeType || "image/png",
+              });
+            }
+          }
+        }
+      }
+
+      if (allImages.length === 0) {
+        throw new Error("No image data found in API response");
+      }
+
+      // If path is provided, save images to disk
+      if (path) {
+        const savePath = resolve(path);
+
+        // Create directory if it doesn't exist
+        if (!existsSync(savePath)) {
+          mkdirSync(savePath, { recursive: true });
+        }
+
+        const savedFiles: string[] = [];
+        const timestamp = Date.now();
+
+        // Save all images
+        for (let i = 0; i < allImages.length; i++) {
+          const image = allImages[i];
+          const extension = image.mimeType.split("/")[1] || "png";
+          const filename = `image_${timestamp}_${i + 1}.${extension}`;
+          const filepath = join(savePath, filename);
+
+          // Decode base64 and save to file
+          const buffer = Buffer.from(image.data, "base64");
+          writeFileSync(filepath, buffer);
+
+          savedFiles.push(filepath);
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Successfully generated ${allImages.length} image${allImages.length > 1 ? 's' : ''} for prompt: "${prompt}"\n\nImages saved to:\n${savedFiles.map(f => `- ${f}`).join('\n')}`,
+            },
+          ],
+        };
+      } else {
+        // Return base64 encoded images
+        const content: Array<{ type: string; text?: string; data?: string; mimeType?: string }> = [
           {
             type: "text",
-            text: `Image generated successfully for prompt: "${prompt}"`,
+            text: `Successfully generated ${allImages.length} image${allImages.length > 1 ? 's' : ''} for prompt: "${prompt}"`,
           },
-          {
+        ];
+
+        // Add all images to content
+        for (const image of allImages) {
+          content.push({
             type: "image",
-            data: imageData.data,
-            mimeType: imageData.mimeType || "image/png",
-          },
-        ],
-      };
+            data: image.data,
+            mimeType: image.mimeType,
+          });
+        }
+
+        return { content };
+      }
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError;

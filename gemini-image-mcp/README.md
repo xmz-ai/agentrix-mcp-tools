@@ -88,20 +88,27 @@ gemini-image-mcp
 
 ### generate_image
 
-Generate an image from a text prompt.
+Generate an image from a text prompt. Can return base64 encoded images or save them to disk.
 
 **Parameters:**
 
 - `prompt` (string, required): The text description of the image to generate
 - `aspectRatio` (string, optional): The aspect ratio of the image. Options: "1:1", "16:9", "9:16", "4:3", "3:4". Default: "1:1"
 - `negativePrompt` (string, optional): Description of elements to avoid in the image
+- `path` (string, optional): Directory path to save generated images. If provided, all images will be saved as PNG files instead of returning base64 data
 
 **Returns:**
 
+When `path` is NOT provided:
 - Text confirmation message
-- Base64 encoded image data with MIME type
+- Base64 encoded image data with MIME type (for all generated images)
 
-**Example:**
+When `path` is provided:
+- Text message with list of saved file paths
+
+**Note:** The API may generate multiple images per request. All images will be either returned as base64 data or saved to the specified directory.
+
+**Example 1: Return base64 data**
 
 ```javascript
 {
@@ -112,6 +119,27 @@ Generate an image from a text prompt.
     "negativePrompt": "people, buildings, text"
   }
 }
+```
+
+**Example 2: Save to disk**
+
+```javascript
+{
+  "name": "generate_image",
+  "arguments": {
+    "prompt": "A cute cat sitting on a sofa",
+    "path": "/Users/username/images"
+  }
+}
+```
+
+Response:
+```
+Successfully generated 2 images for prompt: "A cute cat sitting on a sofa"
+
+Images saved to:
+- /Users/username/images/image_1737023456789_1.png
+- /Users/username/images/image_1737023456789_2.png
 ```
 
 ## Development
