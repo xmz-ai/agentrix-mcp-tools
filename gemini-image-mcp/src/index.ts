@@ -95,7 +95,7 @@ class GeminiImageMCPServer {
               },
               path: {
                 type: "string",
-                description: "Optional directory path to save generated images. If provided, images will be saved as PNG files instead of returning base64 data.",
+                description: "Optional directory with absolute path to save generated images. If provided, images will be saved as PNG files instead of returning base64 data. And make share it must be not a relative path.",
               },
             },
             required: ["prompt"],
