@@ -18,7 +18,7 @@ const GEMINI_MODEL = process.env.AGENTRIX_GEMINI_IMAGE_MODEL || "gemini-2.5-flas
 
 // Validate required configuration
 if (!GEMINI_API_KEY) {
-  console.error("Error: GEMINI_API_KEY environment variable is required");
+  console.error("Error: AGENTRIX_GEMINI_API_KEY or GEMINI_API_KEY environment variable is required");
   process.exit(1);
 }
 
