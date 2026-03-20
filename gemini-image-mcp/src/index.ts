@@ -12,9 +12,9 @@ import { writeFileSync, mkdirSync, existsSync } from "fs";
 import { join, resolve } from "path";
 
 // Configuration from environment variables
-const GEMINI_BASE_URL = process.env.GEMINI_BASE_URL || "https://generativelanguage.googleapis.com/v1beta";
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash-image";
+const GEMINI_BASE_URL = process.env.AGNETRIX_GEMINI_BASE_URL || process.env.GEMINI_BASE_URL || "https://generativelanguage.googleapis.com/v1beta";
+const GEMINI_API_KEY = process.env.AGENTRIX_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = process.env.AGENTRIX_GEMINI_MODEL || process.env.GEMINI_MODEL || "gemini-2.5-flash-image";
 
 // Validate required configuration
 if (!GEMINI_API_KEY) {
