@@ -29,13 +29,17 @@ npm run build
 
 ## Configuration
 
-The server requires environment variables for configuration:
+The server requires environment variables for configuration. `AGENTRIX_*` prefixed variables take priority over their unprefixed counterparts:
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `GEMINI_API_KEY` | Yes | - | Your Gemini API key |
-| `GEMINI_BASE_URL` | No | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL |
-| `GEMINI_MODEL` | No | `gemini-2.5-flash-image` | Model to use for image generation |
+| `AGENTRIX_GEMINI_API_KEY` | No* | - | Gemini API key (highest priority) |
+| `GEMINI_API_KEY` | No* | - | Gemini API key (fallback) |
+| `AGENTRIX_GEMINI_BASE_URL` | No | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL (highest priority) |
+| `GEMINI_BASE_URL` | No | `https://generativelanguage.googleapis.com/v1beta` | Gemini API base URL (fallback) |
+| `AGENTRIX_GEMINI_IMAGE_MODEL` | No | `gemini-2.5-flash-image` | Image generation model |
+
+\* At least one of `AGENTRIX_GEMINI_API_KEY` or `GEMINI_API_KEY` is required.
 
 ## Usage
 
@@ -50,9 +54,9 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
       "command": "npx",
       "args": ["-y", "@agentrix/gemini-image-mcp"],
       "env": {
-        "GEMINI_API_KEY": "your-api-key-here",
-        "GEMINI_BASE_URL": "https://generativelanguage.googleapis.com/v1beta",
-        "GEMINI_MODEL": "gemini-2.5-flash-image"
+        "AGENTRIX_GEMINI_API_KEY": "your-api-key-here",
+        "AGENTRIX_GEMINI_BASE_URL": "https://generativelanguage.googleapis.com/v1beta",
+        "AGENTRIX_GEMINI_IMAGE_MODEL": "gemini-2.5-flash-image"
       }
     }
   }
@@ -67,7 +71,7 @@ Or if installed globally:
     "gemini-image": {
       "command": "gemini-image-mcp",
       "env": {
-        "GEMINI_API_KEY": "your-api-key-here"
+        "AGENTRIX_GEMINI_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -77,9 +81,9 @@ Or if installed globally:
 ### Standalone
 
 ```bash
-export GEMINI_API_KEY="your-api-key-here"
-export GEMINI_BASE_URL="https://generativelanguage.googleapis.com/v1beta"
-export GEMINI_MODEL="gemini-2.5-flash-image"
+export AGENTRIX_GEMINI_API_KEY="your-api-key-here"
+export AGENTRIX_GEMINI_BASE_URL="https://generativelanguage.googleapis.com/v1beta"
+export AGENTRIX_GEMINI_IMAGE_MODEL="gemini-2.5-flash-image"
 
 gemini-image-mcp
 ```
